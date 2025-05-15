@@ -307,7 +307,19 @@ function updateZentraScoreDial() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // First-time visitor: wipe any old test data
+  if (!localStorage.getItem('zentraFirstVisitDone')) {
+    localStorage.removeItem('zentraScoreHistory');
+    localStorage.removeItem('zentraScoreHistoryDates');
+    localStorage.removeItem('zentraReflections');
+    localStorage.setItem('zentraFirstVisitDone', 'true');
+  }
+
+  // Now run your normal on-load logic:
   updateZentraScoreDial();
+  // …any other initialization you had…
+});
+
 
   // Dynamic greeting
   const hour = new Date().getHours();
