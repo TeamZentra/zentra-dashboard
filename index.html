@@ -137,6 +137,31 @@
   color: #000080;
   text-decoration: underline;
 }
+    /* ── Tour Tooltip Styles ───────────────────────────────────────────────────── */
+.tour-tooltip {
+  position: absolute;
+  background: #fff8b0;
+  border: 1px solid #f0e68c;
+  border-radius: 6px;
+  padding: 1rem;
+  max-width: 250px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 1001;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.tour-tooltip::after {
+  content: "";
+  position: absolute;
+  width: 0; height: 0;
+  border-style: solid;
+  /* Adjust these to point the “arrow” at your target */
+  border-width: 8px 8px 0 8px;
+  border-color: #fff8b0 transparent transparent transparent;
+  bottom: -8px; /* position at bottom of tooltip */
+  left: 20px;
+}
+/* ───────────────────────────────────────────────────────────────────────────── */
+
   </style>
 </head>
 <body>
@@ -158,7 +183,7 @@
 +  </div>
 +  <!-- Onboarding Modal Overlay End -->
   <div class="container">
-    <div class="zentra-score card">
+   <div id="zentraScoreSection" class="zentra-score card">
       <h2 id="welcomeMessage">Welcome back</h2>
         <h3>Your Zentra Score</h3>
       <div class="dial-container">
@@ -208,7 +233,7 @@
 </div>
 
     <!-- 📊 Weekly Delta -->
-    <div class="card" style="margin-bottom: 1.5rem; grid-column: span 2;">
+    <div id="weeklyDeltaSection" class="card" style="margin-bottom: 1.5rem; grid-column: span 2;">
       <div class="header">📊 Weekly Delta – Your Progress This Week</div>
       <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.95rem;">
         <thead>
@@ -700,5 +725,67 @@ document.addEventListener('DOMContentLoaded', updateReflectionLog);
     })();
   </script>
   <!-- Onboarding Tutorial Script End -->
+    <!-- Tour Tooltip Container Start -->
+  <div id="tourTooltip" class="tour-tooltip" style="display:none;"></div>
+  <!-- Tour Tooltip Container End -->
+      <!-- Tour Tooltip Logic Start -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1) Define your tour steps: target selector + message
+      const tourSteps = [
+        {
+          target: '#zentraScoreSection',
+          text: 'This gauge shows your overall Zentra Score—your trading psychology health at a glance.'
+        },
+        {
+          target: '#weeklyDeltaSection',
+          text: 'Here you can see how your key metrics changed over the last week.'
+        },
+        // Add more steps here as needed:
+        // { target: '#someOtherSection', text: '...' }
+      ];
+
+      let currentStep = 0;
+      const tooltip = document.getElementById('tourTooltip');
+
+      function showStep(index) {
+        const step = tourSteps[index];
+        const elem = document.querySelector(step.target);
+        if (!elem) return;
+
+        // Set content
+        tooltip.innerHTML = `
+          <div>${step.text}</div>
+          <button id="tourNext">Next</button>
+          <button class="skip" id="tourSkip">Skip</button>
+        `;
+
+        // Positioning: just below the target element
+        const rect = elem.getBoundingClientRect();
+        tooltip.style.top  = window.scrollY + rect.bottom  + 10 + 'px';
+        tooltip.style.left = window.scrollX + rect.left + 'px';
+        tooltip.style.display = 'block';
+
+        // Wire buttons
+        document.getElementById('tourNext').onclick = () => {
+          currentStep++;
+          if (currentStep < tourSteps.length) showStep(currentStep);
+          else endTour();
+        };
+        document.getElementById('tourSkip').onclick = endTour;
+      }
+
+      function endTour() {
+        tooltip.style.display = 'none';
+        localStorage.setItem('zentraTourCompleted', 'true');
+      }
+
+      // Auto-launch only once
+      if (!localStorage.getItem('zentraTourCompleted')) {
+        showStep(0);
+      }
+    });
+  </script>
+  <!-- Tour Tooltip Logic End -->
 </body>
 </html>
