@@ -137,30 +137,37 @@
   color: #000080;
   text-decoration: underline;
 }
-    /* ── Tour Tooltip Styles ───────────────────────────────────────────────────── */
+   /* ── Tour Tooltip Styles (Updated) ───────────────────────────────────────────── */
 .tour-tooltip {
   position: absolute;
-  background: #fff8b0;
-  border: 1px solid #f0e68c;
+  background: #fff;                           /* crisp white background */
+  border: 2px solid #000080;                  /* your primary navy accent */
+  color: #000080;                             /* navy text for readability */
+  font-family: 'Segoe UI', sans-serif;        /* match your dashboard font */
   border-radius: 6px;
   padding: 1rem;
-  max-width: 250px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  max-width: 260px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   z-index: 1001;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.tour-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 .tour-tooltip::after {
   content: "";
   position: absolute;
-  width: 0; height: 0;
-  border-style: solid;
-  /* Adjust these to point the “arrow” at your target */
+  bottom: -8px;
+  left: 24px;
   border-width: 8px 8px 0 8px;
-  border-color: #fff8b0 transparent transparent transparent;
-  bottom: -8px; /* position at bottom of tooltip */
-  left: 20px;
+  border-style: solid;
+  border-color: #fff transparent transparent transparent; /* white arrow */
 }
 /* ───────────────────────────────────────────────────────────────────────────── */
+
 
   </style>
 </head>
@@ -749,9 +756,37 @@ document.addEventListener('DOMContentLoaded', updateReflectionLog);
       const tooltip = document.getElementById('tourTooltip');
 
       function showStep(index) {
-        const step = tourSteps[index];
-        const elem = document.querySelector(step.target);
-        if (!elem) return;
+  const step = tourSteps[index];
+  const elem = document.querySelector(step.target);
+  if (!elem) return;
+
+  // Set content
+  tooltip.innerHTML = `
+    <div>${step.text}</div>
+    <button id="tourNext">Next</button>
+    <button class="skip" id="tourSkip">Skip</button>
+  `;
+
+  // Position below target
+  const rect = elem.getBoundingClientRect();
+  tooltip.style.top  = window.scrollY + rect.bottom  + 10 + 'px';
+  tooltip.style.left = window.scrollX + rect.left + 'px';
+
+  // Show & animate
+  tooltip.style.display = 'block';
+  requestAnimationFrame(() => {
+    tooltip.classList.add('visible');
+  });
+
+  // Button handlers
+  document.getElementById('tourNext').onclick = () => {
+    currentStep++;
+    if (currentStep < tourSteps.length) showStep(currentStep);
+    else endTour();
+  };
+  document.getElementById('tourSkip').onclick = endTour;
+}
+
 
         // Set content
         tooltip.innerHTML = `
@@ -776,9 +811,15 @@ document.addEventListener('DOMContentLoaded', updateReflectionLog);
       }
 
       function endTour() {
-        tooltip.style.display = 'none';
-        localStorage.setItem('zentraTourCompleted', 'true');
-      }
+  // Fade out
+  tooltip.classList.remove('visible');
+  tooltip.addEventListener('transitionend', () => {
+    tooltip.style.display = 'none';
+  }, { once: true });
+
+  localStorage.setItem('zentraTourCompleted', 'true');
+}
+
 
       // Auto-launch only once
       if (!localStorage.getItem('zentraTourCompleted')) {
