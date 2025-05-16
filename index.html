@@ -131,8 +131,8 @@
           <polygon id="needle" points="100,30 97,100 103,100" fill="#000" stroke="#000" stroke-width="1" filter="url(#needleShadow)" transform="rotate(0 100 100)" class="needle-glow" />
         </svg>
         <div class="score-center">
-          <h1 id="zentraScore">76</h1>
-          <p>Only 12 points from optimal clarity</p>
+          <h1 id="zentraScore">--</h1>
+          <p id="scoreMessage" style="display: none;">Only 12 points from optimal clarity</p>
         </div>
       </div>
       <div class="zone-labels">
@@ -146,8 +146,8 @@
     <!-- 🚨 Risk Trigger Alert -->
     <div class="card" style="grid-column: span 2; background-color: #fff3cd; border-left: 6px solid #ff9800; margin-bottom: 2rem;">
       <div class="header">⚠️ Attention Needed</div>
-      <p style="margin: 0; color: #000;">Your FOMO Risk has increased 3 sessions in a row. Consider reducing exposure in fast-moving markets.</p>
-    </div>
+<p style="margin-top: 0.5rem; color: #000080; font-size: 0.95rem;">Here you’ll find alerts and warnings that may need your attention based on your recent performance.</p>
+</div>
 
     
 
@@ -172,18 +172,18 @@
         <tbody>
           <tr>
             <td style="padding: 0.5rem;">Zentra Score</td>
-            <td style="padding: 0.5rem;">+4 📈</td>
-            <td style="padding: 0.5rem;">Steady emotional control improvement</td>
+            <td style="padding: 0.5rem;" id="delta-zentra">--</td>
+            <td style="padding: 0.5rem;" id="comment-zentra">--</td>
           </tr>
           <tr>
             <td style="padding: 0.5rem;">Clarity</td>
-            <td style="padding: 0.5rem;">+3 ✅</td>
-            <td style="padding: 0.5rem;">Less hesitation during entries</td>
+            <td style="padding: 0.5rem;" id="delta-clarity">--</td>
+            <td style="padding: 0.5rem;" id="comment-clarity">--</td>
           </tr>
           <tr>
             <td style="padding: 0.5rem;">Impulsivity</td>
-            <td style="padding: 0.5rem;">-2 ⬇️</td>
-            <td style="padding: 0.5rem;">Fewer early trades</td>
+            <td style="padding: 0.5rem;" id="delta-impulsivity">--</td>
+            <td style="padding: 0.5rem;" id="comment-impulsivity">--</td>
           </tr>
         </tbody>
       </table>
@@ -202,10 +202,8 @@
       <p style="font-size: 1rem; color: #000080;">
         Based on your recent emotional and performance data, we’ve noticed the following patterns:
       </p>
-      <ul style="padding-left: 1rem; color: #333; font-size: 0.95rem; list-style-type: disc;">
-  <li>Confidence tends to dip on Wednesdays.</li>
-  <li>Higher impulsivity scores often follow green (profitable) days.</li>
-  <li>Calmer sessions are linked to journaling done the day before.</li>
+      <ul style="padding-left: 1rem; color: #333; font-size: 0.95rem; list-style-type: disc;" id="zentra-loop-list">
+  <!-- Dynamic Zentra loop patterns will be inserted here -->
 </ul>
 </div>
 
@@ -213,7 +211,60 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const score = 76;
+  // Update Weekly Delta only if reflection data exists
+  const reflections = JSON.parse(localStorage.getItem('zentraReflections') || '[]');
+  if (reflections.length > 1) {
+    const previousScore = autoGenerateZentraScore(reflections.slice(0, -1));
+    const currentScore = autoGenerateZentraScore();
+    const delta = currentScore - previousScore;
+    document.getElementById('delta-zentra').textContent = delta > 0 ? `+${delta} 📈` : delta < 0 ? `${delta} ⬇️` : '0';
+    // Simulate metrics for Clarity and Impulsivity for now (could be replaced later)
+    document.getElementById('delta-clarity').textContent = '+2 ✅';
+    document.getElementById('delta-impulsivity').textContent = '-1 ⬇️';
+  }
+  const isFirstVisit = !localStorage.getItem('zentraUserFirstVisit');
+  console.log('Is first visit:', isFirstVisit);
+  if (isFirstVisit) {
+    localStorage.setItem('zentraUserFirstVisit', 'true');
+  }
+  // First-time visitor: clear any old prototype data
+  if (!localStorage.getItem('zentraInitialized')) {
+    localStorage.removeItem('zentraScoreHistory');
+    localStorage.removeItem('zentraScoreHistoryDates');
+    localStorage.removeItem('zentraReflections');
+    localStorage.setItem('zentraInitialized', 'true');
+  }
+  // Check first visit
+  const isFirst = !localStorage.getItem('zentraFirstVisitDone');
+  if (isFirst) {
+    localStorage.removeItem('zentraScoreHistory');
+    localStorage.removeItem('zentraScoreHistoryDates');
+    localStorage.removeItem('zentraReflections');
+    localStorage.setItem('zentraFirstVisitDone', 'true');
+  }
+
+  // Dynamic greeting
+  const hour = new Date().getHours();
+  let greeting;
+  if (isFirst) {
+    greeting = 'Welcome';
+  } else {
+    greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  }
+  const userName = 'Hamail';
+  document.getElementById('welcomeMessage').textContent = `${greeting}, ${userName}`;
+  // First-time visitor initialization: clear any existing data for fresh start
+  if (!localStorage.getItem('zentraFirstVisitDone')) {
+    localStorage.removeItem('zentraScoreHistory');
+    localStorage.removeItem('zentraScoreHistoryDates');
+    localStorage.removeItem('zentraReflections');
+    // Keep userName as Hamail or set default
+    localStorage.setItem('zentraFirstVisitDone', 'true');
+  }
+
+  // Existing load logic () => {
+  const storedReflections = JSON.parse(localStorage.getItem('zentraReflections') || '[]');
+  const score = storedReflections.length ? autoGenerateZentraScore() : null;
   const needle = document.getElementById("needle");
   if (!needle) return;
 
@@ -271,7 +322,8 @@ function autoGenerateZentraScore() {
 }
 
 function updateZentraScoreDial() {
-  const score = autoGenerateZentraScore();
+  const storedReflections = JSON.parse(localStorage.getItem('zentraReflections') || '[]');
+  const score = storedReflections.length ? autoGenerateZentraScore() : null;
   const needle = document.getElementById("needle");
   if (!needle) return;
 
@@ -287,7 +339,7 @@ function updateZentraScoreDial() {
       needle.setAttribute('transform', `rotate(${angle} 100 100)`);
       clearInterval(interval);
 
-      document.getElementById('zentraScore').textContent = score;
+      document.getElementById('zentraScore').textContent = score !== null ? score : '--';
       document.getElementById('zentraNote').textContent =
         score >= 67 ? 'You are in the Zen Zone' : score >= 34 ? 'You are in the Caution Zone' : 'You are in the Instinct Zone';
 
@@ -307,19 +359,7 @@ function updateZentraScoreDial() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // First-time visitor: wipe any old test data
-  if (!localStorage.getItem('zentraFirstVisitDone')) {
-    localStorage.removeItem('zentraScoreHistory');
-    localStorage.removeItem('zentraScoreHistoryDates');
-    localStorage.removeItem('zentraReflections');
-    localStorage.setItem('zentraFirstVisitDone', 'true');
-  }
-
-  // Now run your normal on-load logic:
   updateZentraScoreDial();
-  // …any other initialization you had…
-});
-
 
   // Dynamic greeting
   const hour = new Date().getHours();
@@ -445,13 +485,11 @@ document.addEventListener('DOMContentLoaded', () => {
     <!-- 🧠 Emotional Memory Timeline -->
     <div class="card" style="margin-bottom: 3rem; grid-column: span 2;">
       <div class="header">Emotional Memory Timeline</div>
-      <ul style="list-style: none; padding-left: 0;">
-  <li><strong>Today:</strong> 😊 Calm</li>
-  <li><strong>Yesterday:</strong> 😰 Anxious</li>
-  <li><strong>Monday:</strong> 😐 Neutral</li>
-  <li><strong>Last Friday:</strong> 😡 Frustrated</li>
-  <li><strong>Last Thursday:</strong> 🧘‍♂️ Focused</li>
-</ul>
+            <ul id="emotional-memory-list" style="list-style: none; padding-left: 0;">
+        <li>Not enough data yet to detect patterns.</li>
+      </ul>
+    </div>
+      
 </div>
 
 <div class="card" style="margin-bottom: 3rem; grid-column: span 2;">
@@ -494,4 +532,91 @@ document.addEventListener('DOMContentLoaded', () => {
       <ul id="micro-wins-list" style="margin-top: 1rem; padding-left: 1rem; list-style-type: disc; color: #2e7d32; font-size: 0.95rem;"></ul>
 </div>
 
+<!-- Zentra Loops Logic -->
+<script>
+function updateZentraLoops() {
+  const reflections = JSON.parse(localStorage.getItem('zentraReflections') || '[]');
+  const list = document.getElementById('zentra-loop-list');
+  list.innerHTML = '';
+  if (reflections.length < 3) {
+    list.innerHTML = '<li>Not enough data yet to detect patterns.</li>';
+    return;
+  }
+  const patterns = [];
+  const texts = reflections.map(r => r.text.toLowerCase());
+  if (texts.includes('confident') && texts.includes('impulsive')) {
+    patterns.push('🚩 Impulsivity tends to rise after confident sessions.');
+  }
+  if (texts.includes('journal') && texts.includes('calm')) {
+    patterns.push('🧘 Calm sessions follow journaling the day before.');
+  }
+  if (!patterns.length) {
+    list.innerHTML = '<li>No strong patterns detected yet — continue reflecting to unlock insights.</li>';
+  } else {
+    patterns.forEach(p => {
+      const li = document.createElement('li');
+      li.textContent = p;
+      list.appendChild(li);
+    });
+  }
+}
 
+document.addEventListener('DOMContentLoaded', updateZentraLoops);
+</script>
+<script>
+  function updateEmotionalMemory() {
+    const list = document.getElementById('emotional-memory-list');
+    if (!list) return;
+    const reflections = JSON.parse(localStorage.getItem('zentraReflections') || '[]');
+    list.innerHTML = '';
+    if (!reflections.length) {
+      list.innerHTML = '<li>No memory yet — reflect to build your timeline.</li>';
+      return;
+    }
+    reflections.slice(-5).reverse().forEach(r => {
+      const li = document.createElement('li');
+      const dateStr = r.date ? new Date(r.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : '';
+      li.innerHTML = `<strong>${dateStr}:</strong> ${r.text}`;
+      list.appendChild(li);
+    });
+  }
+  document.addEventListener('DOMContentLoaded', updateEmotionalMemory);
+</script>
+<script>
+function logEmotion(emotion) {
+  const note = document.getElementById('customNote')?.value || '';
+  const date = new Date().toISOString();
+  const reflections = JSON.parse(localStorage.getItem('zentraReflections') || '[]');
+  const text = emotion + (note ? ': ' + note : '');
+  reflections.push({ date, text });
+  localStorage.setItem('zentraReflections', JSON.stringify(reflections));
+  updateReflectionLog();
+  updateMicroWins();
+  updateZentraScoreDial();
+  updateZentraLoops();
+  updateEmotionalMemory();
+  document.getElementById('customNote').value = '';
+}
+
+function updateReflectionLog() {
+  const list = document.getElementById('reflection-log');
+  if (!list) return;
+  const reflections = JSON.parse(localStorage.getItem('zentraReflections') || '[]');
+  list.innerHTML = '';
+  reflections.slice(-5).reverse().forEach(r => {
+    const li = document.createElement('li');
+    const dateStr = r.date ? new Date(r.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : '';
+    li.innerHTML = `<strong>${dateStr}:</strong> ${r.text}`;
+    list.appendChild(li);
+  });
+}
+
+function saveReflection() {
+  const note = document.getElementById('customNote')?.value;
+  if (note) logEmotion(note);
+}
+
+document.addEventListener('DOMContentLoaded', updateReflectionLog);
+</script>
+</body>
+</html>
