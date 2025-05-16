@@ -104,10 +104,59 @@
       font-size: 1.2rem;
       font-weight: bold;
       margin-bottom: 1rem;
-    }
+    }#onboardingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.onboarding-step {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 500px;
+  text-align: center;
+}
+.onboarding-step button {
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #000080;
+  color: white;
+  cursor: pointer;
+}
+.onboarding-step button.skip {
+  background-color: transparent;
+  color: #000080;
+  text-decoration: underline;
+}
   </style>
 </head>
 <body>
+  <body>
++  <div id="onboardingOverlay">
++    <div class="onboarding-step" data-step="1">
++      <h2>Welcome to Zentra!</h2>
++      <p>Your personal trading psychology companion.</p>
++      <button id="startTour">Start Tour</button>
++      <button class="skip" id="skipTour">Skip Tutorial</button>
++    </div>
++    <div class="onboarding-step" data-step="2" style="display:none;">
++      <h3>Zentra Score 📈</h3>
++      <p>This shows your real-time trading psychology health. Aim for the Zen Zone!</p>
++      <button id="nextStep">Next</button>
++      <button class="skip" id="skipTour2">Skip Tutorial</button>
++    </div>
++    <!-- Additional steps can go here -->
++  </div>
++  <!-- Onboarding Modal Overlay End -->
   <div class="container">
     <div class="zentra-score card">
       <h2 id="welcomeMessage">Welcome back</h2>
@@ -618,5 +667,38 @@ function saveReflection() {
 
 document.addEventListener('DOMContentLoaded', updateReflectionLog);
 </script>
+      <!-- Onboarding Tutorial Script Start -->
+  <script>
+    (function(){
+      const overlay = document.getElementById('onboardingOverlay');
+      const steps  = Array.from(document.querySelectorAll('.onboarding-step'));
+      let   current = 0;
+
+      function showStep(idx) {
+        steps.forEach((el,i) => el.style.display = i === idx ? 'block' : 'none');
+        overlay.style.display = 'flex';
+      }
+
+      function hideTour() {
+        overlay.style.display = 'none';
+        localStorage.setItem('zentraTourCompleted','true');
+      }
+
+      document.getElementById('startTour').addEventListener('click', () => showStep(1));
+      document.getElementById('skipTour').addEventListener('click', hideTour);
+      document.getElementById('skipTour2').addEventListener('click', hideTour);
+      document.getElementById('nextStep').addEventListener('click', () => {
+        current++;
+        if (current >= steps.length) return hideTour();
+        showStep(current);
+      });
+
+      // Auto-launch for new users only
+      if (!localStorage.getItem('zentraTourCompleted')) {
+        showStep(0);
+      }
+    })();
+  </script>
+  <!-- Onboarding Tutorial Script End -->
 </body>
 </html>
