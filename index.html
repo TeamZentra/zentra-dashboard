@@ -137,17 +137,19 @@
   color: #000080;
   text-decoration: underline;
 }
-   /* ── Tour Tooltip Styles (Updated) ───────────────────────────────────────────── */
+   
+}
+/* ── Tour Tooltip Styles ───────────────────────────────────────────────────── */
 .tour-tooltip {
   position: absolute;
-  background: #fff;                           /* crisp white background */
-  border: 2px solid #000080;                  /* your primary navy accent */
-  color: #000080;                             /* navy text for readability */
-  font-family: 'Segoe UI', sans-serif;        /* match your dashboard font */
+  background: #ffffff;                          /* white background */
+  border: 2px solid #000080;                    /* navy accent border */
+  color: #000080;                               /* navy text */
+  font-family: 'Segoe UI', sans-serif;          /* match your dashboard font */
   border-radius: 6px;
   padding: 1rem;
   max-width: 260px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);       /* gentle drop shadow */
   z-index: 1001;
   opacity: 0;
   transform: translateY(-10px);
@@ -160,35 +162,17 @@
 .tour-tooltip::after {
   content: "";
   position: absolute;
-  bottom: -8px;
-  left: 24px;
+  bottom: -8px;                                 /* arrow points down to target */
+  left: 24px;                                   /* center arrow under tooltip */
   border-width: 8px 8px 0 8px;
   border-style: solid;
-  border-color: #fff transparent transparent transparent; /* white arrow */
+  border-color: #ffffff transparent transparent transparent;
 }
 /* ───────────────────────────────────────────────────────────────────────────── */
-
 
   </style>
 </head>
 <body>
-  <body>
-+  <div id="onboardingOverlay">
-+    <div class="onboarding-step" data-step="1">
-+      <h2>Welcome to Zentra!</h2>
-+      <p>Your personal trading psychology companion.</p>
-+      <button id="startTour">Start Tour</button>
-+      <button class="skip" id="skipTour">Skip Tutorial</button>
-+    </div>
-+    <div class="onboarding-step" data-step="2" style="display:none;">
-+      <h3>Zentra Score 📈</h3>
-+      <p>This shows your real-time trading psychology health. Aim for the Zen Zone!</p>
-+      <button id="nextStep">Next</button>
-+      <button class="skip" id="skipTour2">Skip Tutorial</button>
-+    </div>
-+    <!-- Additional steps can go here -->
-+  </div>
-+  <!-- Onboarding Modal Overlay End -->
   <div class="container">
    <div id="zentraScoreSection" class="zentra-score card">
       <h2 id="welcomeMessage">Welcome back</h2>
@@ -699,134 +683,72 @@ function saveReflection() {
 
 document.addEventListener('DOMContentLoaded', updateReflectionLog);
 </script>
-      <!-- Onboarding Tutorial Script Start -->
-  <script>
-    (function(){
-      const overlay = document.getElementById('onboardingOverlay');
-      const steps  = Array.from(document.querySelectorAll('.onboarding-step'));
-      let   current = 0;
+  <!-- Tour Tooltip Container Start -->
+<div id="tourTooltip" class="tour-tooltip" style="display:none;"></div>
+<!-- Tour Tooltip Container End -->
+</body>
+<!-- Tour Tooltip Logic Start -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tourSteps = [
+      {
+        target: '#zentraScoreSection',
+        text: 'This gauge shows your overall Zentra Score—your trading psychology health at a glance.'
+      },
+      {
+        target: '#weeklyDeltaSection',
+        text: 'Here you can see how your key metrics changed over the last week.'
+      },
+      // Add more steps below, matching any other section IDs you’ve set:
+      // { target: '#scoreTrendSection', text: '…' },
+      // { target: '#zentraLoopsSection', text: '…' },
+      // etc.
+    ];
 
-      function showStep(idx) {
-        steps.forEach((el,i) => el.style.display = i === idx ? 'block' : 'none');
-        overlay.style.display = 'flex';
-      }
+    let currentStep = 0;
+    const tooltip = document.getElementById('tourTooltip');
 
-      function hideTour() {
-        overlay.style.display = 'none';
-        localStorage.setItem('zentraTourCompleted','true');
-      }
+    function showStep(idx) {
+      const step = tourSteps[idx];
+      const elem = document.querySelector(step.target);
+      if (!elem) return;
 
-      document.getElementById('startTour').addEventListener('click', () => showStep(1));
-      document.getElementById('skipTour').addEventListener('click', hideTour);
-      document.getElementById('skipTour2').addEventListener('click', hideTour);
-      document.getElementById('nextStep').addEventListener('click', () => {
-        current++;
-        if (current >= steps.length) return hideTour();
-        showStep(current);
+      tooltip.innerHTML = `
+        <div>${step.text}</div>
+        <button id="tourNext">Next</button>
+        <button class="skip" id="tourSkip">Skip</button>
+      `;
+
+      const rect = elem.getBoundingClientRect();
+      tooltip.style.top  = window.scrollY + rect.bottom  + 10 + 'px';
+      tooltip.style.left = window.scrollX + rect.left + 'px';
+
+      tooltip.style.display = 'block';
+      requestAnimationFrame(() => {
+        tooltip.classList.add('visible');
       });
 
-      // Auto-launch for new users only
-      if (!localStorage.getItem('zentraTourCompleted')) {
-        showStep(0);
-      }
-    })();
-  </script>
-  <!-- Onboarding Tutorial Script End -->
-    <!-- Tour Tooltip Container Start -->
-  <div id="tourTooltip" class="tour-tooltip" style="display:none;"></div>
-  <!-- Tour Tooltip Container End -->
-      <!-- Tour Tooltip Logic Start -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // 1) Define your tour steps: target selector + message
-      const tourSteps = [
-        {
-          target: '#zentraScoreSection',
-          text: 'This gauge shows your overall Zentra Score—your trading psychology health at a glance.'
-        },
-        {
-          target: '#weeklyDeltaSection',
-          text: 'Here you can see how your key metrics changed over the last week.'
-        },
-        // Add more steps here as needed:
-        // { target: '#someOtherSection', text: '...' }
-      ];
+      document.getElementById('tourNext').onclick = () => {
+        currentStep++;
+        if (currentStep < tourSteps.length) showStep(currentStep);
+        else endTour();
+      };
+      document.getElementById('tourSkip').onclick = endTour;
+    }
 
-      let currentStep = 0;
-      const tooltip = document.getElementById('tourTooltip');
+    function endTour() {
+      tooltip.classList.remove('visible');
+      tooltip.addEventListener('transitionend', () => {
+        tooltip.style.display = 'none';
+      }, { once: true });
+      localStorage.setItem('zentraTourCompleted', 'true');
+    }
 
-      function showStep(index) {
-  const step = tourSteps[index];
-  const elem = document.querySelector(step.target);
-  if (!elem) return;
-
-  // Set content
-  tooltip.innerHTML = `
-    <div>${step.text}</div>
-    <button id="tourNext">Next</button>
-    <button class="skip" id="tourSkip">Skip</button>
-  `;
-
-  // Position below target
-  const rect = elem.getBoundingClientRect();
-  tooltip.style.top  = window.scrollY + rect.bottom  + 10 + 'px';
-  tooltip.style.left = window.scrollX + rect.left + 'px';
-
-  // Show & animate
-  tooltip.style.display = 'block';
-  requestAnimationFrame(() => {
-    tooltip.classList.add('visible');
+    if (!localStorage.getItem('zentraTourCompleted')) {
+      showStep(0);
+    }
   });
-
-  // Button handlers
-  document.getElementById('tourNext').onclick = () => {
-    currentStep++;
-    if (currentStep < tourSteps.length) showStep(currentStep);
-    else endTour();
-  };
-  document.getElementById('tourSkip').onclick = endTour;
-}
-
-
-        // Set content
-        tooltip.innerHTML = `
-          <div>${step.text}</div>
-          <button id="tourNext">Next</button>
-          <button class="skip" id="tourSkip">Skip</button>
-        `;
-
-        // Positioning: just below the target element
-        const rect = elem.getBoundingClientRect();
-        tooltip.style.top  = window.scrollY + rect.bottom  + 10 + 'px';
-        tooltip.style.left = window.scrollX + rect.left + 'px';
-        tooltip.style.display = 'block';
-
-        // Wire buttons
-        document.getElementById('tourNext').onclick = () => {
-          currentStep++;
-          if (currentStep < tourSteps.length) showStep(currentStep);
-          else endTour();
-        };
-        document.getElementById('tourSkip').onclick = endTour;
-      }
-
-      function endTour() {
-  // Fade out
-  tooltip.classList.remove('visible');
-  tooltip.addEventListener('transitionend', () => {
-    tooltip.style.display = 'none';
-  }, { once: true });
-
-  localStorage.setItem('zentraTourCompleted', 'true');
-}
-
-
-      // Auto-launch only once
-      if (!localStorage.getItem('zentraTourCompleted')) {
-        showStep(0);
-      }
-    });
-  </script>
-  <!-- Tour Tooltip Logic End -->
+</script>
+<!-- Tour Tooltip Logic End -->
 </body>
 </html>
