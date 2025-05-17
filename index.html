@@ -137,19 +137,18 @@
   color: #000080;
   text-decoration: underline;
 }
-   
 }
-/* ── Tour Tooltip Styles ───────────────────────────────────────────────────── */
+/* ── Tour Tooltip Styles ── */
 .tour-tooltip {
   position: absolute;
-  background: #ffffff;                          /* white background */
-  border: 2px solid #000080;                    /* navy accent border */
-  color: #000080;                               /* navy text */
-  font-family: 'Segoe UI', sans-serif;          /* match your dashboard font */
+  background: #ffffff;
+  border: 2px solid #000080;
+  color: #000080;
+  font-family: 'Segoe UI', sans-serif;
   border-radius: 6px;
   padding: 1rem;
   max-width: 260px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);       /* gentle drop shadow */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   z-index: 1001;
   opacity: 0;
   transform: translateY(-10px);
@@ -162,14 +161,13 @@
 .tour-tooltip::after {
   content: "";
   position: absolute;
-  bottom: -8px;                                 /* arrow points down to target */
-  left: 24px;                                   /* center arrow under tooltip */
+  bottom: -8px;
+  left: 24px;
   border-width: 8px 8px 0 8px;
   border-style: solid;
   border-color: #ffffff transparent transparent transparent;
 }
-/* ───────────────────────────────────────────────────────────────────────────── */
-
+/* ──────────────────────── */
   </style>
 </head>
 <body>
@@ -750,5 +748,7 @@ document.addEventListener('DOMContentLoaded', updateReflectionLog);
   });
 </script>
 <!-- Tour Tooltip Logic End -->
+  <div id="tourTooltip" class="tour-tooltip" style="display:none;"></div>
+
 </body>
 </html>
